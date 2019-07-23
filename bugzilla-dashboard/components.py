@@ -20,10 +20,9 @@ def update():
         productName= name = product['name']
 
         components = product['components']
-        tempData = components[2:3]
 
         # Get bugcount for each metrics of component
-        for component in tempData:
+        for component in components:
             if component['triage_owner'] != '':
                 componentBugs = {}
                 for metric in metrics:
