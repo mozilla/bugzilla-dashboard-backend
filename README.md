@@ -16,8 +16,11 @@ pip install -r requirements.txt -r requirements-dev.txt
 To run the linting tests:
 ```
 flake8
+<<<<<<< HEAD
 ```
 To run tests:
 ```
 pytest
+=======
+>>>>>>> Fix - Review comments
 ```
