@@ -1,10 +1,9 @@
 import sys
 import requests
 import urllib
-import logging
 import structlog
+import json
 from bugzilla_dashboard.config import BZ_HOST
-from bugzilla_dashboard.config import BZ_QUERIES
 from bugzilla_dashboard.config import COMPONENTS_URL
 
 logger = structlog.get_logger(__name__)
@@ -27,13 +26,13 @@ def update():
     data = getData(COMPONENTS_URL)
 
     products = data['products']
-    metrics = BZ_QUERIES
-    tempData = products[0:1]
+    with open('bugzilla_dashboard/components_query.json', 'r') as f:
+        metrics = json.load(f)
 
     componentsData = {}
 
     # Loop through components and get bug count for each component
-    for product in tempData:
+    for product in products:
         productName = product['name']
 
         components = product['components']
