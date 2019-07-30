@@ -42,10 +42,10 @@ def update():
     componentsData = {}
 
     # Loop through components and get bug count for each component
-    for product in products:
-        productName = product['name']
+    for product in tempData:
+        productName = product["name"]
 
-        components = product['components']
+        components = product["components"]
 
         # Get bugcount for each metrics of component
         for component in components:
