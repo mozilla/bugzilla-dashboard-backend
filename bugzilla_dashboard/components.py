@@ -18,53 +18,50 @@ def getData(url):
             return response.json()
 
     except requests.exceptions.RequestException as e:
-        print(e)
+        logger.debug('Something went wrong', error=e)
         sys.exit(1)
 
 
 def update():
     data = getData(COMPONENTS_URL)
 
-    products = data['products']
-    with open('bugzilla_dashboard/components_query.json', 'r') as f:
+    products = data["products"]
+    with open("bugzilla_dashboard/components_query.json", "r") as f:
         metrics = json.load(f)
-
+    tempData = products[0:1]
     componentsData = {}
 
     # Loop through components and get bug count for each component
-    for product in products:
-        productName = product['name']
+    for product in tempData:
+        productName = product["name"]
 
-        components = product['components']
+        components = product["components"]
 
         # Get bugcount for each metrics of component
         for component in components:
-            if(component['triage_owner'] == ''):
-                logger.debug('Triage owner email id is missing')
-            if component['triage_owner'] != '':
+            if component["triage_owner"] == "":
+                logger.debug("Triage owner email id is missing")
+            else:
                 componentBugs = {}
-                for metric in metrics:
-                    metrics[metric]['parameters'].update({
-                        'component': component['name'],
-                        'product': productName
-                    })
+                for metric_key, metric in metrics.items():
+                    metric["parameters"].update(
+                        {"component": component["name"], "product": productName}
+                    )
 
                     # Encode URL for fetching bugcount using metrics
-                    url = urllib.parse.urlencode(metrics[metric]['parameters'])
+                    url = urllib.parse.urlencode(metric["parameters"])
 
-                    bzUrl = "{}/rest/bug?count_only=1&{}".format(
-                        BZ_HOST, url)
-                    link = "{}/buglist.cgi?{}".format(
-                        BZ_HOST, url)
+                    bzUrl = "{}/rest/bug?count_only=1&{}".format(BZ_HOST, url)
+                    link = "{}/buglist.cgi?{}".format(BZ_HOST, url)
 
                     bugs = getData(bzUrl)
 
-                    componentBugs[metric] = {
-                        'count': bugs['bug_count'],
-                        'link': link
+                    componentBugs[metric_key] = {
+                        "count": bugs["bug_count"],
+                        "link": link,
                     }
 
-                key = productName+'::'+component['name']
+                key = productName + "::" + component["name"]
                 componentsData[key] = componentBugs
 
     return componentsData
