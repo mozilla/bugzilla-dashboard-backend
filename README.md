@@ -17,3 +17,7 @@ To run the linting tests:
 ```
 flake8
 ```
+To run tests:
+```
+pytest
+```
