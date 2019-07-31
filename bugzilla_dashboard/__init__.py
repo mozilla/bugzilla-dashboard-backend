@@ -24,13 +24,13 @@ def not_found(error):
 # Get component data
 @app.route("/api/v1/components")
 def getComponents():
-    if not os.path.exists("static"):
+    if not os.path.exists(STATIC_DIR):
         createDir()
 
     componentsPath = os.path.join(STATIC_DIR, 'components.json')
     if os.path.getsize(componentsPath) > 0:
-        bzComponents = json.load(open(componentsPath))
-        return bzComponents
+        with open(componentsPath, "r") as f:
+            return json.load(f)
     else:
         return "No data found"
 

@@ -1,10 +1,11 @@
-import sys
+import os
 import requests
 import urllib
 import structlog
 import json
 from bugzilla_dashboard.config import BZ_HOST
 from bugzilla_dashboard.config import COMPONENTS_URL
+COMPONENTS_QUERY = os.path.join(os.path.dirname(__file__), 'components_query.json')
 
 logger = structlog.get_logger(__name__)
 
@@ -19,14 +20,14 @@ def getData(url):
 
     except requests.exceptions.RequestException as e:
         logger.debug('Something went wrong', error=e)
-        sys.exit(1)
+        raise Exception('Something went wrong {}'.format(e))
 
 
 def update():
     data = getData(COMPONENTS_URL)
 
     products = data["products"]
-    with open("bugzilla_dashboard/components_query.json", "r") as f:
+    with open(COMPONENTS_QUERY, "r") as f:
         metrics = json.load(f)
     tempData = products[0:1]
     componentsData = {}
