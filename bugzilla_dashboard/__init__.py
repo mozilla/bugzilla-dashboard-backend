@@ -3,9 +3,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from flask import Flask
 import os
+
+from flask import Flask
+from flask import json
 from flask_cors import CORS
+
 from . import components
 
 app = Flask(__name__)
@@ -37,16 +40,17 @@ def getComponents():
 # Update components data
 @app.route('/update')
 def update():
-	if not os.path.exists('static'):
-		createDir()
+    if not os.path.exists('static'):
+        createDir()
 
-	data = components.update()
+    data = components.update()
 
-	f = open('static/components.json', "w")
-	f.write(json.dumps(data, separators=(',', ':')))
-	f.close()
+    f = open('static/components.json', "w")
+    f.write(json.dumps(data, separators=(',', ':')))
+    f.close()
 
-	return 'Result updated'
+    return 'Result updated'
+
 
 # Create static directory and components.json file for local development
 def createDir():

@@ -1,8 +1,10 @@
-import os
-import requests
-import urllib
-import structlog
 import json
+import os
+import urllib
+
+import requests
+import structlog
+
 from bugzilla_dashboard.config import BZ_HOST
 from bugzilla_dashboard.config import COMPONENTS_URL
 
