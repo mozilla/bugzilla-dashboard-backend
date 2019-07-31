@@ -10,7 +10,7 @@ from . import components
 
 app = Flask(__name__)
 CORS(app, resources=r"/api/*")
-STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 
 
 @app.errorhandler(404)
@@ -27,7 +27,7 @@ def getComponents():
     if not os.path.exists(STATIC_DIR):
         createDir()
 
-    componentsPath = os.path.join(STATIC_DIR, 'components.json')
+    componentsPath = os.path.join(STATIC_DIR, "components.json")
     if os.path.getsize(componentsPath) > 0:
         with open(componentsPath, "r") as f:
             return json.load(f)
@@ -51,7 +51,7 @@ def update():
 # Create static directory and components.json file for local development
 def createDir():
     os.makedirs(STATIC_DIR)
-    f = open(os.path.join(STATIC_DIR, 'components.json'), "w")
+    f = open(os.path.join(STATIC_DIR, "components.json"), "w")
     f.close()
 
 
