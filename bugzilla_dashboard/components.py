@@ -12,6 +12,7 @@ import structlog
 
 from bugzilla_dashboard.config import BZ_HOST
 from bugzilla_dashboard.config import COMPONENTS_URL
+COMPONENTS_QUERY = os.path.join(os.path.dirname(__file__), 'components_query.json')
 
 COMPONENTS_QUERY = os.path.join(
     os.path.dirname(__file__), "components_query.json"
