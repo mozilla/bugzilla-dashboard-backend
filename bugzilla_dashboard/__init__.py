@@ -28,7 +28,7 @@ def getComponents():
     if not os.path.exists(STATIC_DIR):
         createDir()
 
-    componentsPath = os.path.join(STATIC_DIR, 'components.json')
+    componentsPath = os.path.join(STATIC_DIR, "components.json")
     if os.path.getsize(componentsPath) > 0:
         with open(componentsPath, 'r') as f:
             return json.load(f)
