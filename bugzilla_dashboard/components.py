@@ -14,7 +14,7 @@ from bugzilla_dashboard.config import BZ_HOST
 from bugzilla_dashboard.config import COMPONENTS_URL
 
 COMPONENTS_QUERY = os.path.join(
-    os.path.dirname(__file__), "components_query.json"
+    os.path.dirname(__file__), 'components_query.json'
 )
 
 COMPONENTS_QUERY = os.path.join(
@@ -37,8 +37,8 @@ def getData(url):
             return response.json()
 
     except requests.exceptions.RequestException as e:
-        logger.debug("Something went wrong", error=e)
-        raise Exception("Something went wrong {}".format(e))
+        logger.debug('Something went wrong', error=e)
+        raise Exception('Something went wrong {}'.format(e))
 
 
 def update():
@@ -51,9 +51,9 @@ def update():
 
     # Loop through components and get bug count for each component
     for product in products:
-        productName = product["name"]
+        productName = product['name']
 
-        components = product["components"]
+        components = product['components']
 
         # Get bugcount for each metrics of component
         for component in components:
