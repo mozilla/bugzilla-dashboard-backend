@@ -12,8 +12,8 @@ from flask_cors import CORS
 from . import components
 
 app = Flask(__name__)
-CORS(app, resources=r"/api/*")
-STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+CORS(app, resources=r'/api/*')
+STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
 
 
 @app.errorhandler(404)
@@ -25,17 +25,17 @@ def not_found(error):
 
 
 # Get component data
-@app.route("/api/v1/components")
+@app.route('/api/v1/components')
 def getComponents():
     if not os.path.exists(STATIC_DIR):
         createDir()
 
-    componentsPath = os.path.join(STATIC_DIR, "components.json")
+    componentsPath = os.path.join(STATIC_DIR, 'components.json')
     if os.path.getsize(componentsPath) > 0:
-        with open(componentsPath, "r") as f:
+        with open(componentsPath, 'r') as f:
             return json.load(f)
     else:
-        return "No data found"
+        return 'No data found'
 
 # Update components data
 @app.route('/update')
@@ -45,7 +45,7 @@ def update():
 
     data = components.update()
 
-    f = open('static/components.json', "w")
+    f = open('static/components.json', 'w')
     f.write(json.dumps(data, separators=(',', ':')))
     f.close()
 
@@ -55,9 +55,9 @@ def update():
 # Create static directory and components.json file for local development
 def createDir():
     os.makedirs(STATIC_DIR)
-    f = open(os.path.join(STATIC_DIR, "components.json"), "w")
+    f = open(os.path.join(STATIC_DIR, 'components.json'), 'w')
     f.close()
 
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=3000)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=3000)
