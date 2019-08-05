@@ -9,8 +9,6 @@ from flask import Flask
 from flask import json
 from flask_cors import CORS
 
-from . import components
-
 app = Flask(__name__)
 CORS(app, resources=r'/api/*')
 STATIC_DIR = os.path.join(os.path.dirname(__file__), 'static')
@@ -36,20 +34,6 @@ def getComponents():
             return json.load(f)
     else:
         return 'No data found'
-
-# Update components data
-@app.route('/update')
-def update():
-    if not os.path.exists('static'):
-        createDir()
-
-    data = components.update()
-
-    f = open('static/components.json', 'w')
-    f.write(json.dumps(data, separators=(',', ':')))
-    f.close()
-
-    return 'Result updated'
 
 
 # Create static directory and components.json file for local development
