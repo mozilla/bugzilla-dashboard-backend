@@ -17,14 +17,6 @@ COMPONENTS_QUERY = os.path.join(
     os.path.dirname(__file__), 'components_query.json'
 )
 
-COMPONENTS_QUERY = os.path.join(
-    os.path.dirname(__file__), "components_query.json"
-)
-
-COMPONENTS_QUERY = os.path.join(
-    os.path.dirname(__file__), 'components_query.json'
-)
-
 logger = structlog.get_logger(__name__)
 
 
