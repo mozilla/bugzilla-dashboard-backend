@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import argparse
 import json
 import os
 from collections import defaultdict
@@ -14,6 +15,7 @@ from libmozdata.bugzilla import Bugzilla
 COMPONENTS_QUERY = os.path.join(
     os.path.dirname(__file__), "../queries/components_query.json"
 )
+OUTPUT_FILE = "product_compoent_data.json"
 logger = structlog.get_logger(__name__)
 
 
@@ -68,7 +70,7 @@ class ComponentQuery:
         return bugs
 
     @staticmethod
-    def build(out=""):
+    def build(out_dir=""):
         """Get all the bugs for the queries we've in component_queries.json"""
         with open(COMPONENTS_QUERY, "r") as In:
             data = json.load(In)
@@ -79,8 +81,29 @@ class ComponentQuery:
             params["include_fields"] = ["product", "component"]
             ComponentQuery(name, params).gather(results)
 
-        if out:
-            with open(out, "w") as Out:
+        if out_dir:
+            try:
+                os.mkdir(out_dir)
+            except OSError:
+                logger.error(f"Cannot create output directory: {out_dir}.")
+
+            with open(f"{out_dir}/{OUTPUT_FILE}", "w") as Out:
                 json.dump(results, Out)
 
         return results
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Retrieve data from Bugzilla for product::component"
+    )
+    parser.add_argument(
+        "-o",
+        "--output",
+        dest="out_dir",
+        action="store",
+        default="",
+        help="The output directory where to write the data",
+    )
+    args = parser.parse_args()
+    ComponentQuery.build(out_dir=args.out_dir)
