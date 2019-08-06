@@ -82,12 +82,9 @@ class ComponentQuery:
             ComponentQuery(name, params).gather(results)
 
         if out_dir:
-            try:
-                os.mkdir(out_dir)
-            except OSError:
-                logger.error(f"Cannot create output directory: {out_dir}.")
+            os.makedirs(out_dir, exist_ok=True)
 
-            with open(f"{out_dir}/{OUTPUT_FILE}", "w") as Out:
+            with open(os.path.join(out_dir, OUTPUT_FILE), "w") as Out:
                 json.dump(results, Out)
 
         return results
@@ -102,7 +99,7 @@ if __name__ == "__main__":
         "--output",
         dest="out_dir",
         action="store",
-        default="",
+        default=os.environ.get("BZD_OUTPUT_PATH", ""),
         help="The output directory where to write the data",
     )
     args = parser.parse_args()

@@ -1,11 +1,8 @@
 FROM python:slim
 
-COPY requirements.txt /requirements.txt
+COPY . .
 
-RUN pip install --disable-pip-version-check --no-cache-dir -r /requirements.txt
-
-COPY . /tmp/bzdata
-
-WORKDIR /tmp/bzdata
+RUN pip install --no-cache-dir -r /requirements.txt && \
+    python setup.py install
 
 ENTRYPOINT ["python", "-m", "bugzilla_dashboard.component_queries"]
