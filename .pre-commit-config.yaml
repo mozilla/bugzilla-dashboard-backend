@@ -34,6 +34,10 @@ repos:
   - repo: meta
     hooks:
       - id: check-useless-excludes
+  - repo: https://github.com/marco-c/taskcluster_yml_validator
+    rev: v0.0.2
+    hooks:
+      - id: taskcluster_yml
 
 default_language_version:
   python: python3.7
