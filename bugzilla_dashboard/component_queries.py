@@ -45,8 +45,8 @@ class ComponentQuery:
         return res
 
     def gather(self, results):
-        bugs = self.get_bugs()
         """Transform the data to be used in the dashboard"""
+        bugs = self.get_bugs()
         for (product, component), count in self.transform(bugs).items():
             prod_comp = f"{product}::{component}"
             link = self.get_bz_search_url(
