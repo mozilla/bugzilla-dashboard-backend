@@ -1,0 +1,98 @@
+{
+    "P1Defect": {
+        "label": "P1s defect",
+        "parameters": {
+            "f1": "creation_ts", "o1": "greaterthaneq", "v1": "-1y",
+            "priority": "P1",
+            "resolution": "---",
+            "bug_type": "defect"
+        }
+    },
+    "unassignedBetaBugs": {
+        "label": "Unassigned tracked beta bugs",
+        "parameters": {
+            "f1": "cf_tracking_firefox_beta",
+            "o1": "anyexact",
+            "v1": "+,blocking",
+            "f2": "cf_status_firefox_beta", "o2": "equals", "v2": "affected",
+            "j3": "OR",
+            "f3": "OP",
+            "f4": "assigned_to", "o4": "equals", "v4": "nobody@mozilla.org",
+            "f5": "assigned_to", "o5": "regexp", "v5": "^.*\\.bugs$",
+            "f6": "CP"
+        }
+    },
+    "nightlyNewBug": {
+        "label": "Nightly New Regression",
+        "parameters": {
+            "resolution": "---",
+            "f1": "cf_status_firefox_nightly", "o1": "equals", "v1": "affected",
+            "f2": "cf_status_firefox_beta", "o2": "anyexact", "v2": "unaffected,?,---",
+            "f3": "flagtypes.name", "o3": "notequals", "v3": "needinfo?",
+            "f4": "cf_tracking_firefox_nightly", "o4": "notequals", "v4": "---",
+            "f5": "keywords", "o5": "nowords", "v5": "stalled",
+            "f6": "keywords", "o6": "anywords", "v6": "regression"
+        }
+    },
+    "nightlyCarryOver": {
+        "label": "Nightly carry over",
+        "parameters": {
+            "resolution": "---",
+            "f1": "cf_status_firefox_nightly", "o1": "equals", "v1": "affected",
+            "f2": "cf_status_firefox_beta", "o2": "nowords", "v2": "unaffected,?,---",
+            "f3": "flagtypes.name", "o3": "notequals", "v3": "needinfo?",
+            "f4": "cf_tracking_firefox_nightly", "o4": "notequals", "v4": "---",
+            "f5": "keywords", "o5": "nowords", "v5": "stalled",
+            "f6": "keywords", "o6": "anywords", "v6": "regression"
+        }
+    },
+    "newDefects": {
+        "label": "New defects",
+        "parameters": {
+            "f1": "creation_ts", "o1": "greaterthaneq", "v1": "-1y",
+            "priority": "--",
+            "resolution": "---",
+            "bug_type": "defect"
+        }
+    },
+
+    "needinfo": {
+        "label": "Needinfo",
+        "parameters": {
+            "priority": "--",
+            "resolution": "---",
+            "f1": "flagtypes.name", "o1": "equals", "v1": "needinfo?",
+            "j2": "OR",
+            "f2": "OP",
+            "f3": "assigned_to", "o3": "equals", "v3": "nobody@mozilla.org",
+            "f4": "assigned_to", "o4": "regexp", "v4": "^.*\\.bugs$",
+            "f5": "CP"
+        }
+    },
+
+    "P1Task": {
+        "label": "P1s task",
+        "parameters": {
+            "f1": "creation_ts", "o1": "greaterthaneq", "v1": "-1y",
+            "priority": "P1",
+            "resolution": "---",
+            "bug_type": "task"
+        }
+    },
+    "P1Enhancement": {
+        "label": "P1s enhancement",
+        "parameters": {
+            "f1": "creation_ts", "o1": "greaterthaneq", "v1": "-1y",
+            "priority": "P1",
+            "resolution": "---",
+            "bug_type": "enhancement"
+        }
+    },
+    "sec": {
+        "label": "sec-{critical, high}",
+        "parameters": {
+            "resolution": "---",
+            "f1": "keywords", "o1": "anywords", "v1": "sec-critical,sec-high"
+        }
+    }
+  }
