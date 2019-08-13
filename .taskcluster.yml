@@ -94,7 +94,7 @@ tasks:
           - taskboot
           - build
           - --image
-          - mozilla/bugzilla-dashboard-backend
+          - babadie/bugzilla-dashboard-backend
           - --tag
           - "${channel}"
           - --tag
@@ -117,9 +117,37 @@ tasks:
 
     - $if: 'channel in ["testing", "production"]'
       then:
-        taskId: {$eval: as_slugid("hook")}
+        taskId: {$eval: as_slugid("deploy")}
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '1 hour'}
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
         dependencies:
           - {$eval: as_slugid("build")}
+        payload:
+          features:
+            # Needed for access to secret
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          env:
+            TASKCLUSTER_SECRET: "project/relman/bugzilla-dashboard-backend/deploy-${channel}"
+          command:
+            - taskboot
+            - push-artifact
+        scopes:
+          - "secrets:get:project/relman/bugzilla-dashboard-backend/deploy-${channel}"
+        metadata:
+          name: "Bugzilla Dashboard Backend hook update (${channel})"
+          description: Push backend's docker image on repository
+          owner: bastien@mozilla.com
+          source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - $if: 'channel in ["testing", "production"]'
+      then:
+        taskId: {$eval: as_slugid("hook")}
+        dependencies:
+          - {$eval: as_slugid("deploy")}
         scopes:
           - "assume:hook-id:project-relman/bugzilla-dashboard-backend-${channel}"
           - "hooks:modify-hook:project-relman/bugzilla-dashboard-backend-${channel}"
@@ -128,8 +156,6 @@ tasks:
         provisionerId: aws-provisioner-v1
         workerType: github-worker
         payload:
-          env:
-            BUILD_TASK: {$eval: as_slugid("build")}
           features:
             # Needed for access to hook api
             taskclusterProxy: true
@@ -139,7 +165,7 @@ tasks:
             - "/bin/sh"
             - "-lcxe"
             - "git clone --quiet ${repository} /target && cd /target && git checkout ${head_rev} -b checks &&
-               cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' -e \"s/BUILD_TASK/$BUILD_TASK/g\" taskcluster-hook.json &&
+               cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' taskcluster-hook.json &&
                taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
         metadata:
           name: "Bugzilla Dashboard Backend hook update (${channel})"

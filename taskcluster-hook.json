@@ -22,7 +22,7 @@
             "description": "Build datasets for bugzilla dashboard",
             "name": "Bugzilla dashboard data generation (CHANNEL)",
             "owner": "babadie@mozilla.com",
-            "source": "https://github.com/mozilla/code-review"
+            "source": "https://github.com/mozilla/bugzilla-dashboard-backend"
         },
         "payload": {
             "artifacts": {
@@ -39,11 +39,7 @@
             "features": {
                 "taskclusterProxy": true
             },
-            "image": {
-                "path": "public/bugzilla-dashboard-backend.tar",
-                "taskId": "BUILD_TASK",
-                "type": "task-image"
-            },
+            "image": "babadie/bugzilla-dashboard-backend:REVISION",
             "maxRunTime": 7200
         },
         "priority": "normal",
