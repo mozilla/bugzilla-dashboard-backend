@@ -15,7 +15,7 @@ from libmozdata.bugzilla import Bugzilla
 COMPONENTS_QUERY = os.path.join(
     os.path.dirname(__file__), "../queries/components_query.json"
 )
-OUTPUT_FILE = "product_compoent_data.json"
+OUTPUT_FILE = "product_component_data.json"
 logger = structlog.get_logger(__name__)
 
 
