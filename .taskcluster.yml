@@ -1,0 +1,174 @@
+version: 1
+policy:
+  pullRequests: public
+tasks:
+  $let:
+    head_branch:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.ref}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.ref}
+        else: ${event.release.target_commitish}
+
+    head_rev:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.sha}
+      else:
+        $if: 'tasks_for == "github-push"'
+        then: ${event.after}
+        else: ${event.release.tag_name}
+
+    repository:
+      $if: 'tasks_for == "github-pull-request"'
+      then: ${event.pull_request.head.repo.html_url}
+      else: ${event.repository.html_url}
+
+    channel:
+      $if: 'tasks_for == "github-push"'
+      then:
+        $if: 'event.ref in ["refs/heads/testing", "refs/heads/production"]'
+        then: ${event.ref[11:]}
+        else: 'dev'
+      else: 'dev'
+
+    taskboot_image: "mozilla/taskboot:0.1.9"
+  in:
+    - taskId: {$eval: as_slugid("check_lint")}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      payload:
+        maxRunTime: 3600
+        image: python:3
+        command:
+          - sh
+          - -lxce
+          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b checks &&
+            cd /src && pip install --quiet -r requirements.txt -r requirements-dev.txt &&
+            pre-commit run -a"
+      metadata:
+        name: "Bugzilla Dashboard Backend checks: linting"
+        description: Check code style with pre-commit hooks
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - taskId: {$eval: as_slugid("check_tests")}
+      provisionerId: aws-provisioner-v1
+      workerType: github-worker
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      payload:
+        maxRunTime: 3600
+        image: python:3
+        command:
+          - sh
+          - -lxce
+          - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b checks &&
+            cd /src && pip install --quiet -r requirements.txt -r requirements-dev.txt &&
+            pytest -v"
+      metadata:
+        name: "Bugzilla Dashboard Backend checks: unit tests"
+        description: Check code integrity with unit tests
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - taskId: {$eval: as_slugid("build")}
+      created: {$fromNow: ''}
+      deadline: {$fromNow: '1 hour'}
+      provisionerId: aws-provisioner-v1
+      workerType: relman-svc
+      dependencies:
+        - {$eval: as_slugid("check_lint")}
+        - {$eval: as_slugid("check_tests")}
+      payload:
+        capabilities:
+          privileged: true
+        maxRunTime: 3600
+        image: "${taskboot_image}"
+        env:
+          GIT_REPOSITORY: ${repository}
+          GIT_REVISION: ${head_rev}
+        command:
+          - taskboot
+          - build
+          - --image
+          - babadie/bugzilla-dashboard-backend
+          - --tag
+          - "${channel}"
+          - --tag
+          - "${head_rev}"
+          - --write
+          - /backend.tar
+          - Dockerfile
+        artifacts:
+          public/bugzilla-dashboard-backend.tar:
+            expires: {$fromNow: '2 weeks'}
+            path: /backend.tar
+            type: file
+      scopes:
+        - docker-worker:capability:privileged
+      metadata:
+        name: Bugzilla Dashboard Backend build
+        description: Build docker image of the backend
+        owner: bastien@mozilla.com
+        source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - $if: 'channel in ["testing", "production"]'
+      then:
+        taskId: {$eval: as_slugid("deploy")}
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '1 hour'}
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        dependencies:
+          - {$eval: as_slugid("build")}
+        payload:
+          features:
+            # Needed for access to secret
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          env:
+            TASKCLUSTER_SECRET: "project/relman/bugzilla-dashboard-backend/deploy-${channel}"
+          command:
+            - taskboot
+            - push-artifact
+        scopes:
+          - "secrets:get:project/relman/bugzilla-dashboard-backend/deploy-${channel}"
+        metadata:
+          name: "Bugzilla Dashboard Backend deploy on ${channel}: docker push"
+          description: Push backend's docker image on repository
+          owner: bastien@mozilla.com
+          source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - $if: 'channel in ["testing", "production"]'
+      then:
+        taskId: {$eval: as_slugid("hook")}
+        dependencies:
+          - {$eval: as_slugid("deploy")}
+        scopes:
+          - "assume:hook-id:project-relman/bugzilla-dashboard-backend-${channel}"
+          - "hooks:modify-hook:project-relman/bugzilla-dashboard-backend-${channel}"
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '5 hours'}
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        payload:
+          features:
+            # Needed for access to hook api
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          command:
+            - "/bin/sh"
+            - "-lcxe"
+            - "git clone --quiet ${repository} /target && cd /target && git checkout ${head_rev} -b checks &&
+               cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' taskcluster-hook.json &&
+               taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
+        metadata:
+          name: "Bugzilla Dashboard Backend deploy on ${channel}: hook update"
+          description: Update Taskcluster hook triggering the bugzilla-dashboard-backend tasks
+          owner: bastien@mozilla.com
+          source: https://github.com/mozilla/bugzilla-dashboard-backend
