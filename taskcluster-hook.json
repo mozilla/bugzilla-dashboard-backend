@@ -6,7 +6,9 @@
         "name": "Bugzilla dashboard data generation (CHANNEL)",
         "owner": "babadie@mozilla.com"
     },
-    "schedule": [],
+    "schedule": [
+      "0 0 */6 * * *"
+    ],
     "task": {
         "created": {
             "$fromNow": "0 seconds"

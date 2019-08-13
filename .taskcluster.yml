@@ -138,7 +138,7 @@ tasks:
         scopes:
           - "secrets:get:project/relman/bugzilla-dashboard-backend/deploy-${channel}"
         metadata:
-          name: "Bugzilla Dashboard Backend hook update (${channel})"
+          name: "Bugzilla Dashboard Backend deploy on ${channel}: docker push"
           description: Push backend's docker image on repository
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/bugzilla-dashboard-backend
@@ -168,7 +168,7 @@ tasks:
                cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' taskcluster-hook.json &&
                taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
         metadata:
-          name: "Bugzilla Dashboard Backend hook update (${channel})"
+          name: "Bugzilla Dashboard Backend deploy on ${channel}: hook update"
           description: Update Taskcluster hook triggering the bugzilla-dashboard-backend tasks
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/bugzilla-dashboard-backend
