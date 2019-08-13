@@ -69,7 +69,7 @@ tasks:
             cd /src && pip install --quiet -r requirements.txt -r requirements-dev.txt &&
             pytest -v"
       metadata:
-        name: "Bugzilla Dashboard Backend checks: linting"
+        name: "Bugzilla Dashboard Backend checks: unit tests"
         description: Check code integrity with unit tests
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/bugzilla-dashboard-backend
@@ -114,3 +114,35 @@ tasks:
         description: Build docker image of the backend
         owner: bastien@mozilla.com
         source: https://github.com/mozilla/bugzilla-dashboard-backend
+
+    - $if: 'channel in ["testing", "production"]'
+      then:
+        taskId: {$eval: as_slugid("hook")}
+        dependencies:
+          - {$eval: as_slugid("build")}
+        scopes:
+          - "assume:hook-id:project-relman/bugzilla-dashboard-backend-${channel}"
+          - "hooks:modify-hook:project-relman/bugzilla-dashboard-backend-${channel}"
+        created: {$fromNow: ''}
+        deadline: {$fromNow: '5 hours'}
+        provisionerId: aws-provisioner-v1
+        workerType: github-worker
+        payload:
+          env:
+            BUILD_TASK: {$eval: as_slugid("build")}
+          features:
+            # Needed for access to hook api
+            taskclusterProxy: true
+          maxRunTime: 3600
+          image: "${taskboot_image}"
+          command:
+            - "/bin/sh"
+            - "-lcxe"
+            - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b checks &&
+               cd /src && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' -e \"s/BUILD_TASK/$BUILD_TASK/g\" taskcluster-hook.json &&
+               taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
+        metadata:
+          name: "Bugzilla Dashboard Backend hook update (${channel})"
+          description: Update Taskcluster hook triggering the bugzilla-dashboard-backend tasks
+          owner: bastien@mozilla.com
+          source: https://github.com/mozilla/bugzilla-dashboard-backend

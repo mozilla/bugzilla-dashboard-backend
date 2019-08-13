@@ -1,0 +1,62 @@
+{
+    "bindings": [],
+    "metadata": {
+        "description": "Regularly create bugzilla dashboard datasets",
+        "emailOnError": true,
+        "name": "Bugzilla dashboard data generation (CHANNEL)",
+        "owner": "babadie@mozilla.com"
+    },
+    "schedule": [],
+    "task": {
+        "created": {
+            "$fromNow": "0 seconds"
+        },
+        "deadline": {
+            "$fromNow": "2 hours"
+        },
+        "expires": {
+            "$fromNow": "1 month"
+        },
+        "extra": {},
+        "metadata": {
+            "description": "Build datasets for bugzilla dashboard",
+            "name": "Bugzilla dashboard data generation (CHANNEL)",
+            "owner": "babadie@mozilla.com",
+            "source": "https://github.com/mozilla/code-review"
+        },
+        "payload": {
+            "artifacts": {
+                "project/relman/bugzilla-dashboard": {
+                    "path": "/output",
+                    "type": "directory"
+                }
+            },
+            "cache": {},
+            "capabilities": {},
+            "env": {
+                "BZD_OUTPUT_PATH": "/output"
+            },
+            "features": {
+                "taskclusterProxy": true
+            },
+            "image": {},
+            "maxRunTime": 7200
+        },
+        "priority": "normal",
+        "provisionerId": "aws-provisioner-v1",
+        "retries": 3,
+        "routes": [
+            "index.project.relman.CHANNEL.bugzilla-dashboard.latest"
+        ],
+        "schedulerId": "-",
+        "scopes": [
+            "index:insert-task:project.relman.CHANNEL.bugzilla-dashboard.*"
+        ],
+        "tags": {},
+        "workerType": "relman-svc"
+    },
+    "triggerSchema": {
+        "additionalProperties": true,
+        "type": "object"
+    }
+}
