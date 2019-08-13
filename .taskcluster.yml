@@ -138,8 +138,8 @@ tasks:
           command:
             - "/bin/sh"
             - "-lcxe"
-            - "git clone --quiet ${repository} /src && cd /src && git checkout ${head_rev} -b checks &&
-               cd /src && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' -e \"s/BUILD_TASK/$BUILD_TASK/g\" taskcluster-hook.json &&
+            - "git clone --quiet ${repository} /target && cd /target && git checkout ${head_rev} -b checks &&
+               cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' -e \"s/BUILD_TASK/$BUILD_TASK/g\" taskcluster-hook.json &&
                taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
         metadata:
           name: "Bugzilla Dashboard Backend hook update (${channel})"
