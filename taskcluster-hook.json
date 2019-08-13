@@ -39,7 +39,11 @@
             "features": {
                 "taskclusterProxy": true
             },
-            "image": {},
+            "image": {
+                "path": "public/bugzilla-dashboard-backend.tar",
+                "taskId": "BUILD_TASK",
+                "type": "task-image"
+            },
             "maxRunTime": 7200
         },
         "priority": "normal",
