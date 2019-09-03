@@ -3,14 +3,15 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import argparse
 import json
 import os
 from collections import defaultdict
-from urllib.parse import urlencode
 
 import structlog
-from libmozdata.bugzilla import Bugzilla
+
+from . import cli
+from . import utils
+from .query import Query
 
 COMPONENTS_QUERY = os.path.join(
     os.path.dirname(__file__), "../queries/components_query.json"
@@ -19,23 +20,9 @@ OUTPUT_FILE = "product_component_data.json"
 logger = structlog.get_logger(__name__)
 
 
-class ComponentQuery:
+class ComponentQuery(Query):
     def __init__(self, name, params):
-        super().__init__()
-        self.name = name
-        self.params = params
-
-    def get_bz_params(self):
-        """Get the parameters for the Bugzilla query"""
-        return self.params
-
-    def get_bz_search_url(self, extra={}):
-        """Get the Bugzilla url for this search"""
-        params = self.get_bz_params()
-        if "include_fields" in params:
-            del params["include_fields"]
-        params.update(extra)
-        return f"{Bugzilla.URL}/buglist.cgi?" + urlencode(params, doseq=True)
+        super().__init__(name, params)
 
     def transform(self, bugs):
         """Get stats for each product/component pair"""
@@ -56,21 +43,8 @@ class ComponentQuery:
             )
             results[prod_comp][self.name] = {"count": count, "link": link}
 
-    def get_bugs(self):
-        """Get the bugs"""
-        bugs = []
-        params = self.get_bz_params()
-
-        def bughandler(bug, data):
-            data.append(bug)
-
-        logger.info(f"Get bugs for {self.name}: starting...")
-        Bugzilla(params, bughandler=bughandler, bugdata=bugs).get_data().wait()
-        logger.info(f"Get bugs for {self.name}: finished ({len(bugs)} retrieved).")
-        return bugs
-
     @staticmethod
-    def build(out_dir=""):
+    def build(out_dir="", compress=False):
         """Get all the bugs for the queries we've in component_queries.json"""
         with open(COMPONENTS_QUERY, "r") as In:
             data = json.load(In)
@@ -81,26 +55,11 @@ class ComponentQuery:
             params["include_fields"] = ["product", "component"]
             ComponentQuery(name, params).gather(results)
 
-        if out_dir:
-            os.makedirs(out_dir, exist_ok=True)
-
-            with open(os.path.join(out_dir, OUTPUT_FILE), "w") as Out:
-                json.dump(results, Out)
+        utils.write(results, out_dir, OUTPUT_FILE, compress=compress)
 
         return results
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Retrieve data from Bugzilla for product::component"
-    )
-    parser.add_argument(
-        "-o",
-        "--output",
-        dest="out_dir",
-        action="store",
-        default=os.environ.get("BZD_OUTPUT_PATH", ""),
-        help="The output directory where to write the data",
-    )
-    args = parser.parse_args()
-    ComponentQuery.build(out_dir=args.out_dir)
+    args = cli.get_args("Retrieve data from Bugzilla for product::component")
+    ComponentQuery.build(out_dir=args.out_dir, compress=args.compress)
