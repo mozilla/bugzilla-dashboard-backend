@@ -9,6 +9,8 @@ from collections import defaultdict
 
 import structlog
 
+from . import cli
+from . import utils
 from .query import Query
 
 REPORTEES_QUERY = os.path.join(
@@ -71,11 +73,11 @@ class ReporteeQuery(Query):
         for name, info in data.items():
             ReporteeQuery(name, info["parameters"]).gather(results)
 
-        Query.write(results, out_dir, OUTPUT_FILE, compress=compress)
+        utils.write(results, out_dir, OUTPUT_FILE, compress=compress)
 
         return results
 
 
 if __name__ == "__main__":
-    args = Query.get_args("Retrieve data from Bugzilla for reportees")
+    args = cli.get_args("Retrieve data from Bugzilla for reportees")
     ReporteeQuery.build(out_dir=args.out_dir, compress=args.compress)

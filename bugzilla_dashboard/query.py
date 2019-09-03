@@ -3,11 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import argparse
 import copy
-import gzip
-import json
-import os
 import re
 from urllib.parse import urlencode
 
@@ -19,13 +15,13 @@ logger = structlog.get_logger(__name__)
 
 
 class Query:
+
+    TIMEOUT = 600
+
     def __init__(self, name, params):
         super().__init__()
         self.name = name
         self.params = params
-
-    def get_timeout(self):
-        return 600
 
     def get_bz_params(self):
         """Get the parameters for the Bugzilla query"""
@@ -59,46 +55,7 @@ class Query:
 
         logger.info(f"Get bugs for {self.name}: starting...")
         Bugzilla(
-            params, bughandler=bughandler, bugdata=bugs, timeout=self.get_timeout()
+            params, bughandler=bughandler, bugdata=bugs, timeout=Query.TIMEOUT
         ).get_data().wait()
         logger.info(f"Get bugs for {self.name}: finished ({len(bugs)} retrieved).")
         return bugs
-
-    @staticmethod
-    def write(data, out_dir, file_name, compress=False):
-        if not out_dir:
-            return
-
-        os.makedirs(out_dir, exist_ok=True)
-
-        if compress:
-            data = json.dumps(data)
-            data = bytes(data, "utf-8")
-            data = gzip.compress(data, compresslevel=9)
-            with open(os.path.join(out_dir, file_name + ".gz"), "wb") as Out:
-                Out.write(data)
-        else:
-            with open(os.path.join(out_dir, file_name), "w") as Out:
-                json.dump(data, Out)
-
-    @staticmethod
-    def get_args(description):
-        parser = argparse.ArgumentParser(description=description)
-
-        parser.add_argument(
-            "-o",
-            "--output",
-            dest="out_dir",
-            action="store",
-            default=os.environ.get("BZD_OUTPUT_PATH", ""),
-            help="The output directory where to write the data",
-        )
-
-        parser.add_argument(
-            "-c",
-            "--compress",
-            dest="compress",
-            action="store_true",
-            help="Compress data",
-        )
-        return parser.parse_args()
