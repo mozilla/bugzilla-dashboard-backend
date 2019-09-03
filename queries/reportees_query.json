@@ -1,0 +1,100 @@
+{
+    "assigned_defect": {
+        "label": "Assigned (defect)",
+        "parameters": {
+            "include_fields": ["assigned_to"],
+            "resolution": "---",
+            "bug_type": "defect",
+            "n1": 1,
+            "j1": "OR",
+            "f1": "OP",
+            "f2": "assigned_to",
+            "o2": "equals",
+            "v2": "nobody@mozilla.org",
+            "f3": "assigned_to",
+            "o3": "regexp",
+            "v3": "^.*\\.bugs$",
+            "f4": "assigned_to",
+            "o4": "isempty",
+            "f5": "CP"
+        }
+    },
+    "assigned_total": {
+        "label": "Assigned (total)",
+        "parameters": {
+            "include_fields": ["assigned_to"],
+            "resolution": "---",
+            "n1": 1,
+            "j1": "OR",
+            "f1": "OP",
+            "f2": "assigned_to",
+            "o2": "equals",
+            "v2": "nobody@mozilla.org",
+            "f3": "assigned_to",
+            "o3": "regexp",
+            "v3": "^.*\\.bugs$",
+            "f4": "assigned_to",
+            "o4": "isempty",
+            "f5": "CP"
+        }
+    },
+    "needinfo": {
+        "label": "Needinfo",
+        "parameters": {
+            "include_fields": ["flags"],
+            "f1": "flagtypes.name",
+            "o1": "casesubstring",
+            "v1": "needinfo?"
+        }
+    },
+    "assignedTrackedBeta": {
+        "label": "Assigned & Tracked (Beta)",
+        "parameters": {
+            "include_fields": ["assigned_to"],
+            "resolution": "---",
+            "n1": 1,
+            "j1": "OR",
+            "f1": "OP",
+            "f2": "assigned_to",
+            "o2": "equals",
+            "v2": "nobody@mozilla.org",
+            "f3": "assigned_to",
+            "o3": "regexp",
+            "v3": "^.*\\.bugs$",
+            "f4": "assigned_to",
+            "o4": "isempty",
+            "f5": "CP",
+            "f6": "cf_tracking_firefox_beta",
+            "o6": "anyexact",
+            "v6": "+,blocking",
+            "f7": "cf_status_firefox_beta",
+            "o7": "equals",
+            "v7": "affected"
+        }
+    },
+    "assignedTrackedNightly": {
+        "label": "Assigned & Tracked (Nightly)",
+        "parameters": {
+            "include_fields": ["assigned_to"],
+            "resolution": "---",
+            "n1": 1,
+            "j1": "OR",
+            "f1": "OP",
+            "f2": "assigned_to",
+            "o2": "equals",
+            "v2": "nobody@mozilla.org",
+            "f3": "assigned_to",
+            "o3": "regexp",
+            "v3": "^.*\\.bugs$",
+            "f4": "assigned_to",
+            "o4": "isempty",
+            "f5": "CP",
+            "f6": "cf_tracking_firefox_nightly",
+            "o6": "anyexact",
+            "v6": "+,blocking",
+            "f7": "cf_status_firefox_nightly",
+            "o7": "equals",
+            "v7": "affected"
+        }
+    }
+}
