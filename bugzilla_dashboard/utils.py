@@ -6,6 +6,7 @@
 import gzip
 import json
 import os
+from datetime import datetime
 
 
 def write(data, out_dir, file_name, compress=False):
@@ -13,6 +14,8 @@ def write(data, out_dir, file_name, compress=False):
         return
 
     os.makedirs(out_dir, exist_ok=True)
+
+    data = add_generation_time(data)
 
     path = os.path.join(out_dir, file_name)
     if compress:
@@ -24,3 +27,8 @@ def write(data, out_dir, file_name, compress=False):
     else:
         with open(path, "w") as Out:
             json.dump(data, Out)
+
+
+def add_generation_time(data):
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
+    return {"data": data, "time": now}
