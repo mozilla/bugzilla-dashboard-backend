@@ -41,7 +41,7 @@
             "features": {
                 "taskclusterProxy": true
             },
-            "image": "babadie/bugzilla-dashboard-backend:REVISION",
+            "image": "mozilla/bugzilla-dashboard:backend-REVISION",
             "maxRunTime": 7200
         },
         "priority": "normal",

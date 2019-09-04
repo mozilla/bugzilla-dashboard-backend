@@ -94,11 +94,11 @@ tasks:
           - taskboot
           - build
           - --image
-          - babadie/bugzilla-dashboard-backend
+          - mozilla/bugzilla-dashboard
           - --tag
-          - "${channel}"
+          - "backend-${channel}"
           - --tag
-          - "${head_rev}"
+          - "backend-${head_rev}"
           - --write
           - /backend.tar
           - Dockerfile
