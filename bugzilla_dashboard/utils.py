@@ -15,7 +15,7 @@ def write(data, out_dir, file_name, compress=False):
 
     os.makedirs(out_dir, exist_ok=True)
 
-    data = add_generation_time(data)
+    data = add_metadata(data)
 
     path = os.path.join(out_dir, file_name)
     if compress:
@@ -29,6 +29,7 @@ def write(data, out_dir, file_name, compress=False):
             json.dump(data, Out)
 
 
-def add_generation_time(data):
+def add_metadata(data):
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
-    return {"data": data, "time": now}
+    data["metadata"] = {"time": now}
+    return data
