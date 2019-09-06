@@ -7,6 +7,12 @@ import gzip
 import json
 import os
 from datetime import datetime
+from datetime import timedelta
+
+import dateutil.parser
+
+# Monday
+REFERENCE_DAY = 0
 
 
 def write(data, out_dir, file_name, compress=False):
@@ -33,3 +39,16 @@ def add_metadata(data):
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%SZ")
     data["metadata"] = {"time": now}
     return data
+
+
+def get_reference_date(date):
+    if not date:
+        return None
+
+    date = dateutil.parser.parse(date)
+    day = date.weekday()
+
+    ref = date + timedelta(days=REFERENCE_DAY - day)
+    ref = datetime(ref.year, ref.month, ref.day)
+
+    return ref
