@@ -35,8 +35,8 @@ tasks:
     taskboot_image: "mozilla/taskboot:0.1.9"
   in:
     - taskId: {$eval: as_slugid("check_lint")}
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
+      provisionerId: proj-relman
+      workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
@@ -55,8 +55,8 @@ tasks:
         source: https://github.com/mozilla/bugzilla-dashboard-backend
 
     - taskId: {$eval: as_slugid("check_tests")}
-      provisionerId: aws-provisioner-v1
-      workerType: github-worker
+      provisionerId: proj-relman
+      workerType: ci
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
       payload:
@@ -77,8 +77,8 @@ tasks:
     - taskId: {$eval: as_slugid("build")}
       created: {$fromNow: ''}
       deadline: {$fromNow: '1 hour'}
-      provisionerId: aws-provisioner-v1
-      workerType: relman-svc
+      provisionerId: proj-relman
+      workerType: ci
       dependencies:
         - {$eval: as_slugid("check_lint")}
         - {$eval: as_slugid("check_tests")}
@@ -120,8 +120,8 @@ tasks:
         taskId: {$eval: as_slugid("deploy")}
         created: {$fromNow: ''}
         deadline: {$fromNow: '1 hour'}
-        provisionerId: aws-provisioner-v1
-        workerType: github-worker
+        provisionerId: proj-relman
+        workerType: ci
         dependencies:
           - {$eval: as_slugid("build")}
         payload:
@@ -140,35 +140,5 @@ tasks:
         metadata:
           name: "Bugzilla Dashboard Backend deploy on ${channel}: docker push"
           description: Push backend's docker image on repository
-          owner: bastien@mozilla.com
-          source: https://github.com/mozilla/bugzilla-dashboard-backend
-
-    - $if: 'channel in ["testing", "production"]'
-      then:
-        taskId: {$eval: as_slugid("hook")}
-        dependencies:
-          - {$eval: as_slugid("deploy")}
-        scopes:
-          - "assume:hook-id:project-relman/bugzilla-dashboard-backend-${channel}"
-          - "hooks:modify-hook:project-relman/bugzilla-dashboard-backend-${channel}"
-        created: {$fromNow: ''}
-        deadline: {$fromNow: '5 hours'}
-        provisionerId: aws-provisioner-v1
-        workerType: github-worker
-        payload:
-          features:
-            # Needed for access to hook api
-            taskclusterProxy: true
-          maxRunTime: 3600
-          image: "${taskboot_image}"
-          command:
-            - "/bin/sh"
-            - "-lcxe"
-            - "git clone --quiet ${repository} /target && cd /target && git checkout ${head_rev} -b checks &&
-               cd /target && sed -i -e 's/CHANNEL/${channel}/g' -e 's/REVISION/${head_rev}/g' taskcluster-hook.json &&
-               taskboot --target . build-hook taskcluster-hook.json project-relman bugzilla-dashboard-backend-${channel}"
-        metadata:
-          name: "Bugzilla Dashboard Backend deploy on ${channel}: hook update"
-          description: Update Taskcluster hook triggering the bugzilla-dashboard-backend tasks
           owner: bastien@mozilla.com
           source: https://github.com/mozilla/bugzilla-dashboard-backend
