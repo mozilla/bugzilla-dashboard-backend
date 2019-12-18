@@ -28,7 +28,7 @@
         },
         "payload": {
             "artifacts": {
-                "private/bugzilla-dashboard": {
+                "project/relman/bugzilla-dashboard": {
                     "path": "/output",
                     "type": "directory"
                 }
