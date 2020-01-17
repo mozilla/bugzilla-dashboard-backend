@@ -36,6 +36,7 @@
             "cache": {},
             "capabilities": {},
             "env": {
+                "TASKCLUSTER_SECRET": "project/relman/bugzilla-dashboard/runtime-CHANNEL",
                 "BZD_OUTPUT_PATH": "/output"
             },
             "features": {
@@ -52,7 +53,8 @@
         ],
         "schedulerId": "-",
         "scopes": [
-            "index:insert-task:project.relman.CHANNEL.bugzilla-dashboard.*"
+            "index:insert-task:project.relman.CHANNEL.bugzilla-dashboard.*",
+            "secrets:get:project/relman/bugzilla-dashboard/runtime-CHANNEL"
         ],
         "tags": {},
         "workerType": "relman-svc"
