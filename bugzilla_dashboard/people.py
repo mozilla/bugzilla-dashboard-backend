@@ -3,13 +3,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import json
-import os
-
 import requests
 import structlog
 
 from . import cli
+from . import utils
 
 logger = structlog.get_logger(__name__)
 
@@ -130,9 +128,7 @@ def get_phonebook_dump(output_dir, iam_credentials):
         user["manager"] = manager_id
 
     # Dump the org file as JSON
-    path = os.path.join(output_dir, "people.json")
-    with open(path, "w") as out:
-        json.dump(org, out, sort_keys=True, indent=4, separators=(",", ": "))
+    utils.write(org, output_dir, "people.json", compress=True)
 
 
 if __name__ == "__main__":

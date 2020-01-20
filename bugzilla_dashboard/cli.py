@@ -17,7 +17,7 @@ def get_args(description):
         "--output",
         dest="out_dir",
         action="store",
-        default=os.environ.get("BZD_OUTPUT_PATH", ""),
+        default=os.environ.get("BZD_OUTPUT_PATH", os.path.dirname(os.path.dirname(__file__))),
         help="The output directory where to write the data",
     )
 
