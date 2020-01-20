@@ -7,23 +7,19 @@ import json
 import os
 
 import requests
+import structlog
 
 from . import cli
 
-USERS_URL = (
-    "https://person.api.sso.mozilla.com/v2/users/id/all/by_attribute_contains",
-)
+logger = structlog.get_logger(__name__)
+
+USERS_URL = "https://person.api.sso.mozilla.com/v2/users/id/all"
 
 
 def get_access_token(iam_credentials):
     scope = {
-        "classification": [
-            "mozilla_confidential",
-            "workgroup:staff_only",
-            "public",
-            "workgroup",
-        ],
-        "display": ["staff", "ndaed", "vouched", "authenticated", "public", "none"],
+        "classification": ["mozilla_confidential", "workgroup:staff_only"],
+        "display": ["staff", "public", "none"],
     }
     scope = " ".join(
         f"{key}:{value}" for key, values in scope.items() for value in values
@@ -38,6 +34,9 @@ def get_access_token(iam_credentials):
     }
 
     resp = requests.post("https://auth.mozilla.auth0.com/oauth/token", json=payload)
+    if not resp.ok:
+        logger.error("Invalid Auth response", error=resp.json())
+        resp.raise_for_status()
     access = resp.json()
 
     assert "access_token" in access.keys()
@@ -45,116 +44,51 @@ def get_access_token(iam_credentials):
     return access["access_token"]
 
 
-def clean_data(d):
-    if isinstance(d, dict):
-        for k in ["metadata", "signature"]:
-            if k in d:
-                del d[k]
-
-        for v in d.values():
-            clean_data(v)
-    elif isinstance(d, list):
-        for v in d:
-            clean_data(v)
-
-
-def get_all_info(iam_access_token):
+def get_all_users(iam_access_token):
     headers = {"Authorization": f"Bearer {iam_access_token}"}
-    params = {
-        "staff_information.staff": "True",
-        "active": "True",
-        "fullProfiles": "True",
-    }
-    resp = requests.get(USERS_URL, headers=headers, params=params)
-    data = resp.json()
-    clean_data(data)
+    params = {"active": "True", "connectionMethod": "ad"}
 
-    next_page = data["nextPage"]
+    while True:
+        resp = requests.get(USERS_URL, headers=headers, params=params)
+        if not resp.ok:
+            logger.error("Invalid People API response", error=resp.content)
+            resp.raise_for_status()
 
-    while next_page is not None:
-        print(f"{next_page}")
-        params["nextPage"] = next_page
-        resp = requests.get(USERS_URL, params=params, headers=headers)
-        d = resp.json()
-        clean_data(d)
-        data["users"] += d["users"]
-        next_page = d["nextPage"]
+        data = resp.json()
+        logger.info("Loaded batch of users", nb=len(data["users"]))
+        for user in data["users"]:
+            yield user
 
-    del data["nextPage"]
-
-    return data
+        params["nextPage"] = data["nextPage"]
+        if params["nextPage"] is None:
+            break
 
 
 def get_phonebook_dump(output_dir, iam_credentials):
     # Retrieve access token from IAM
     iam_token = get_access_token(iam_credentials)
 
-    # Retrieve full payloads with that token
-    data = get_all_info(iam_token)
-
-    all_cns = {}
-    all_dns = {}
-
     new_data = {}
-    for person in data["users"]:
-        person = person["profile"]
-        if not person["access_information"]["hris"]["values"]:
-            continue
-        mail = person["access_information"]["hris"]["values"]["primary_work_email"]
-        dn = person["identities"]["mozilla_ldap_id"]["value"]
-        manager_mail = person["access_information"]["hris"]["values"][
-            "managers_primary_work_email"
-        ]
-        if not manager_mail:
-            manager_mail = mail
 
-        _mail = person["identities"]["mozilla_ldap_primary_email"]["value"]
-        assert mail == _mail
+    # Browse full org with that token
+    for user in get_all_users(iam_token):
 
-        ismanager = person["staff_information"]["manager"]["value"]
-        isdirector = person["staff_information"]["director"]["value"]
-        cn = "{} {}".format(person["first_name"]["value"], person["last_name"]["value"])
-        bugzillaEmail = ""
-        if "bugzilla_mozilla_org_primary_email" in person["identities"]:
-            bugzillaEmail = person["identities"]["bugzilla_mozilla_org_primary_email"][
-                "value"
-            ]
-        if not bugzillaEmail and "HACK#BMOMAIL" in person["usernames"]["values"]:
-            bugzillaEmail = person["usernames"]["values"]["HACK#BMOMAIL"]
+        from pprint import pprint
 
-        if bugzillaEmail is None:
-            bugzillaEmail = ""
+        pprint(user)
 
-        del person["usernames"]["values"]["LDAP-posix_id"]
-        del person["usernames"]["values"]["LDAP-posix_uid"]
-        im = list(person["usernames"]["values"].values())
+        pass
 
-        title = person["staff_information"]["title"]["value"]
-        all_cns[mail] = cn
-        all_dns[mail] = dn
-
-        new = {
-            "mail": mail,
-            "manager": {"cn": "", "dn": manager_mail},
-            "ismanager": "TRUE" if ismanager else "FALSE",
-            "isdirector": "TRUE" if isdirector else "FALSE",
-            "cn": cn,
-            "dn": dn,
-            "bugzillaEmail": bugzillaEmail,
-            "title": title,
-        }
-
-        if im:
-            new["im"] = im
-
-        new_data[mail] = new
-
-    for person in new_data.values():
-        manager_mail = person["manager"]["dn"]
-        manager_cn = all_cns[manager_mail]
-        manager_dn = all_dns[manager_mail]
-        person["manager"]["cn"] = manager_cn
-        person["manager"]["dn"] = manager_dn
+        # new = {
+        #    "mail": mail,
+        #    "manager": {"cn": "", "dn": manager_mail},
+        #    "ismanager": "TRUE" if ismanager else "FALSE",
+        #    "isdirector": "TRUE" if isdirector else "FALSE",
+        #    "cn": cn,
+        #    "dn": dn,
+        #    "bugzillaEmail": bugzillaEmail,
+        #    "title": title,
+        # }
 
     new_data = list(new_data.values())
 
