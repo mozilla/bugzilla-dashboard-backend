@@ -13,7 +13,7 @@ from . import cli
 
 logger = structlog.get_logger(__name__)
 
-USERS_URL = "https://person.api.sso.mozilla.com/v2/users/id/all"
+USERS_URL = "https://person.api.sso.mozilla.com/v2/users/id/all/by_attribute_contains"
 
 
 def get_access_token(iam_credentials):
@@ -44,9 +44,29 @@ def get_access_token(iam_credentials):
     return access["access_token"]
 
 
+def clean_user(d):
+    if isinstance(d, dict):
+        # Directly use values from inner payloads
+        if "value" in d:
+            return d["value"]
+        if "values" in d:
+            return d["values"]
+
+        return {k: clean_user(v) for k, v in d.items()}
+
+    elif isinstance(d, list):
+        return [clean_user(v) for v in d]
+
+    return
+
+
 def get_all_users(iam_access_token):
     headers = {"Authorization": f"Bearer {iam_access_token}"}
-    params = {"active": "True", "connectionMethod": "ad"}
+    params = {
+        "active": "True",
+        "fullProfiles": "True",
+        "staff_information.staff": "True",
+    }
 
     while True:
         resp = requests.get(USERS_URL, headers=headers, params=params)
@@ -57,7 +77,7 @@ def get_all_users(iam_access_token):
         data = resp.json()
         logger.info("Loaded batch of users", nb=len(data["users"]))
         for user in data["users"]:
-            yield user
+            yield clean_user(user)
 
         params["nextPage"] = data["nextPage"]
         if params["nextPage"] is None:
@@ -65,36 +85,54 @@ def get_all_users(iam_access_token):
 
 
 def get_phonebook_dump(output_dir, iam_credentials):
+    org = {}
+    emails = {}
+
     # Retrieve access token from IAM
     iam_token = get_access_token(iam_credentials)
-
-    new_data = {}
 
     # Browse full org with that token
     for user in get_all_users(iam_token):
 
-        from pprint import pprint
+        # Build a simplified profile containing:
+        # * id
+        # * name
+        # * email
+        # * bugzilla Email
+        # * manager Email
+        # * picture
+        profile = user["profile"]
+        org[user["id"]] = {
+            "id": user["id"],
+            "name": f"{profile['first_name']} {profile['last_name']}",
+            "email": profile["primary_email"],
+            "bugzillaEmail": profile["identities"][
+                "bugzilla_mozilla_org_primary_email"
+            ],
+            "manager": profile["access_information"]["hris"][
+                "managers_primary_work_email"
+            ],
+            "picture": profile["picture"],
+        }
 
-        pprint(user)
+        # Save the link between emails & id to match back the managers
+        emails[profile["primary_email"]] = user["id"]
 
-        pass
+    # Replace the manager email by their ID
+    for user_id, user in org.items():
+        if user["manager"] is None:
+            continue
 
-        # new = {
-        #    "mail": mail,
-        #    "manager": {"cn": "", "dn": manager_mail},
-        #    "ismanager": "TRUE" if ismanager else "FALSE",
-        #    "isdirector": "TRUE" if isdirector else "FALSE",
-        #    "cn": cn,
-        #    "dn": dn,
-        #    "bugzillaEmail": bugzillaEmail,
-        #    "title": title,
-        # }
+        manager_id = emails.get(user["manager"])
+        if not manager_id:
+            logger.warning("Manager not found", manager=user["manager"], user=user_id)
 
-    new_data = list(new_data.values())
+        user["manager"] = manager_id
 
+    # Dump the org file as JSON
     path = os.path.join(output_dir, "people.json")
     with open(path, "w") as out:
-        json.dump(new_data, out, sort_keys=True, indent=4, separators=(",", ": "))
+        json.dump(org, out, sort_keys=True, indent=4, separators=(",", ": "))
 
 
 if __name__ == "__main__":
