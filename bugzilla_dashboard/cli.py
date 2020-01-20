@@ -6,6 +6,8 @@
 import argparse
 import os
 
+from taskcluster.helper import TaskclusterConfig
+
 
 def get_args(description):
     parser = argparse.ArgumentParser(description=description)
@@ -15,11 +17,29 @@ def get_args(description):
         "--output",
         dest="out_dir",
         action="store",
-        default=os.environ.get("BZD_OUTPUT_PATH", ""),
+        default=os.environ.get(
+            "BZD_OUTPUT_PATH", os.path.dirname(os.path.dirname(__file__))
+        ),
         help="The output directory where to write the data",
     )
 
     parser.add_argument(
         "-c", "--compress", dest="compress", action="store_true", help="Compress data"
     )
+
+    parser.add_argument(
+        "--taskcluster-secret",
+        help="Optional taskcluster secret to get credentials",
+        default=os.environ.get("TASKCLUSTER_SECRET"),
+    )
     return parser.parse_args()
+
+
+def load_secrets(args):
+    """
+    Load secret from remote Taskcluster Instance
+    """
+    assert args.taskcluster_secret, "Missing taskcluster secret"
+    tc = TaskclusterConfig("https://firefox-ci-tc.services.mozilla.com")
+    tc.auth()
+    return tc.load_secrets(args.taskcluster_secret)

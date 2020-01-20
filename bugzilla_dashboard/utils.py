@@ -11,7 +11,7 @@ from datetime import datetime
 
 def write(data, out_dir, file_name, compress=False):
     if not out_dir:
-        return
+        raise Exception("No output directory")
 
     os.makedirs(out_dir, exist_ok=True)
 

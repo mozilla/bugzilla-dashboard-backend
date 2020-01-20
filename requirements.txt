@@ -1,3 +1,7 @@
+aiohttp==3.6.2
+async-timeout==3.0.1
 argparse==1.4.0
 libmozdata==0.1.57
+requests==2.22.0
 structlog==19.1.0
+taskcluster==24.2.0
