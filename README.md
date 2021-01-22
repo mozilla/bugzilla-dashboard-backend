@@ -5,7 +5,7 @@ Backend to fetch details from bugzilla API for bugzilla dashboard
 Setup
 ---------------
 This is a Python 3 application, so it should be easy to bootstrap on your computer:
-Create Virtal environment:
+Create Virtual environment:
 ```
 mkvirtualenv -p /usr/bin/python3 bugzilla-dashboard-backend
 ```
