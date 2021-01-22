@@ -89,6 +89,8 @@ def get_phonebook_dump(output_dir, iam_credentials):
     # Retrieve access token from IAM
     iam_token = get_access_token(iam_credentials)
 
+    must_have = {"first_name", "last_name", "primary_email", "access_information"}
+
     # Browse full org with that token
     for user in get_all_users(iam_token):
 
@@ -100,6 +102,10 @@ def get_phonebook_dump(output_dir, iam_credentials):
         # * manager Email
         # * picture
         profile = user["profile"]
+
+        if not (must_have < set(profile.keys())):
+            continue
+
         org[user["id"]] = {
             "id": user["id"],
             "name": f"{profile['first_name']} {profile['last_name']}",
