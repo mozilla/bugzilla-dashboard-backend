@@ -103,9 +103,9 @@ tasks:
           - /backend.tar
           - Dockerfile
         artifacts:
-          public/bugzilla-dashboard-backend.tar:
+          public/bugzilla-dashboard-backend.tar.zst:
             expires: {$fromNow: '2 weeks'}
-            path: /backend.tar
+            path: /backend.tar.zst
             type: file
       scopes:
         - docker-worker:capability:privileged
