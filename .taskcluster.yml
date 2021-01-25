@@ -32,7 +32,7 @@ tasks:
         else: 'dev'
       else: 'dev'
 
-    taskboot_image: "mozilla/taskboot:0.1.9"
+    taskboot_image: "mozilla/taskboot:0.3.2"
   in:
     - taskId: {$eval: as_slugid("check_lint")}
       provisionerId: proj-relman
