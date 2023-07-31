@@ -107,8 +107,6 @@ tasks:
             expires: {$fromNow: '2 weeks'}
             path: /backend.tar.zst
             type: file
-      scopes:
-        - docker-worker:capability:privileged
       metadata:
         name: Bugzilla Dashboard Backend build
         description: Build docker image of the backend
