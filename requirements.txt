@@ -1,4 +1,4 @@
-aiohttp==3.7.4
+aiohttp==3.8.6
 async-timeout==3.0.1
 argparse==1.4.0
 libmozdata==0.1.57
